@@ -38,7 +38,7 @@ app.use(express.static(`${__dirname}/public`));
 app.use("/api", AuthRoutes);
 
 //  after that all routes should be authorized
-app.use(authorization);
+// app.use(authorization);
 app.use("/api/user", UserRoutes);
 app.use("/api/contact", ContactRoutes);
 

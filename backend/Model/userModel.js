@@ -1,14 +1,15 @@
-const mongoose = require("mongoose");
-const validator = require("validator");
-const bcrypt = require("bcryptjs");
-const validatePhoneNumber = require("validate-phone-number-node-js");
+const mongoose = require('mongoose')
+const validator = require('validator')
+const crypto = require('crypto')
+const bcrypt = require('bcryptjs')
+const validatePhoneNumber = require('validate-phone-number-node-js')
 const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       min: 3,
       trim: true,
-      required: [true, "Please tell us your name!"],
+      required: [true, 'Please tell us your name!'],
     },
     email: {
       type: String,
@@ -16,16 +17,17 @@ const userSchema = new mongoose.Schema(
 
       trim: true,
       lowercase: true,
-      validate: [validator.isEmail, "Please provide a valid email"],
+      validate: [validator.isEmail, 'Please provide a valid email'],
     },
     photo: {
       type: String,
-      default: "default.jpg",
+      default:
+        'https://res.cloudinary.com/dmhcnhtng/image/upload/v1643044376/avatars/default_pic_jeaybr.png',
     },
 
     password: {
       type: String,
-      required: [true, "Please provide a password"],
+      required: [true, 'Please provide a password'],
       minlength: 8,
       select: false,
     },
@@ -33,10 +35,10 @@ const userSchema = new mongoose.Schema(
       type: String,
 
       trim: true,
-      required: [true, "Please provide a password"],
+      required: [true, 'Please provide a password'],
       validate: [
         validatePhoneNumber.validate,
-        "Please provide a valid phone number",
+        'Please provide a valid phone number',
       ],
     },
 
@@ -44,21 +46,39 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: new Date(),
     },
+
+    passwordResetToken: String,
+    passwordResetExpires: Date,
   },
   { timestamps: true }
-);
-userSchema.pre("save", async function(next) {
-  if (!this.isModified("password")) return next();
+)
+userSchema.pre('save', async function(next) {
+  console.log('yes')
+  if (!this.isModified('password')) return next()
+  console.log('yes')
+  // console.log(this);
+  // this.passwordChangedAt = Date.now();
+  this.password = await bcrypt.hash(this.password, 12)
 
-  this.password = await bcrypt.hash(this.password, 12);
+  next()
+})
+userSchema.pre('findOneAndUpdate', function(next) {
+  this.options.runValidators = true
+  next()
+})
+userSchema.methods.createResetToken = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex')
 
-  next();
-});
-userSchema.pre("findOneAndUpdate", function(next) {
-  this.options.runValidators = true;
-  next();
-});
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex')
 
-const User = mongoose.model("User", userSchema);
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000
 
-module.exports = User;
+  return resetToken
+}
+
+const User = mongoose.model('User', userSchema)
+
+module.exports = User
