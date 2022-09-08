@@ -1,15 +1,43 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Avatar, Checkbox, Col, Divider, Row, Typography } from 'antd'
 import { Input } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import ContactCard from './ContactCard'
+import axios from 'axios'
+import { BACKEND_URL } from '../constamts'
+import { contactActions } from '../Reducer/ContactsSlice'
+import { useDispatch, useSelector } from 'react-redux'
 const { Title } = Typography
 const { Text, Link } = Typography
 export default function SearchTab() {
+  const user = useSelector((state) => state.user)
+  console.log(user)
+  const dispatch = useDispatch()
+  const { contacts } = useSelector((state) => state.contacts)
   function getRandomColor() {
     return '#' + Math.random().toString(16).substr(-6)
   }
   const color = getRandomColor()
+  const getAllConacts = async () => {
+    try {
+      const { data } = await axios.get(`${BACKEND_URL}/api/contact/all`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      })
+
+      dispatch(contactActions.getAll(data.data))
+      if (data.data) {
+       
+        dispatch(contactActions.setCurrentContact(data.data[0]._id))
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  useEffect(() => {
+    getAllConacts()
+  }, [])
 
   return (
     <>
@@ -34,12 +62,9 @@ export default function SearchTab() {
           className='contactList'
           style={{ height: '80vh', overflowY: 'scroll' }}
         >
-          <ContactCard />
-          <ContactCard />
-          <ContactCard /> <ContactCard />
-          <ContactCard /> <ContactCard />
-          <ContactCard /> <ContactCard />
-          <ContactCard />
+          {contacts.map((item, index) => (
+            <ContactCard item={item} />
+          ))}
         </div>
       </div>
     </>

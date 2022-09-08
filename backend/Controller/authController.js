@@ -13,7 +13,7 @@ const signToken = (id) => {
 }
 
 const createSendToken = (user, statusCode, res) => {
-  const token = signToken(user._id)
+  const token = signToken(user._id, { expiresIn: 60 * 60 })
 
   const cookieOptions = {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -101,6 +101,7 @@ exports.authorization = catchAsync(async (req, res, next) => {
   ) {
     token = req.headers.authorization.split(' ')[1]
   }
+  console.log(token)
 
   if (!token) {
     return next(

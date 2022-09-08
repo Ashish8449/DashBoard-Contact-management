@@ -2,19 +2,29 @@ import React from 'react'
 import { Button, Checkbox, Form, Input } from 'antd'
 import axios from 'axios'
 import { BACKEND_URL } from '../constamts'
-
+import { useDispatch } from 'react-redux'
+import { userActions } from '../Reducer/UserSlice'
+import Cookies from 'js-cookie'
+import { useNavigate } from 'react-router-dom'
 export default function Login() {
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
   const onFinish = async (values) => {
-    console.log('Success:', values)
-    console.log(values)
-    await axios
-      .post(`${BACKEND_URL}/login`, {
+    try {
+      const { data } = await axios.post(`${BACKEND_URL}/api/login`, {
         email: values.email,
         password: values.password,
       })
-      .then(() => {
-        console.log('LOgin login successful')
-      })
+      dispatch(userActions.logIn(data.data))
+      dispatch(userActions.setToken(data.token))
+      Cookies.set('user', JSON.stringify(data.data), { expires: 1 })
+      Cookies.set('token', JSON.stringify(data.token), { expires: 1 })
+      console.log(data.data)
+      console.log(data.token)
+      // navigate('/')
+
+      navigate('/dashboard')
+    } catch (error) {}
   }
 
   const onFinishFailed = (errorInfo) => {

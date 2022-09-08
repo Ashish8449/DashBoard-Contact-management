@@ -1,13 +1,22 @@
 import { createSlice } from '@reduxjs/toolkit'
-
-const initialState = null
+import Cookies from 'js-cookie'
+const initialState =
+  Cookies.get('user') && Cookies.get('token')
+    ? {
+        user: JSON.parse(Cookies.get('user')),
+        token: JSON.parse(Cookies.get('token')),
+      }
+    : {}
 
 export const userSlice = createSlice({
-  name: 'counter',
+  name: 'user',
   initialState,
   reducers: {
     logIn: (state, action) => {
-      state = action.payload
+      state.user = action.payload
+    },
+    setToken: (state, action) => {
+      state.token = action.payload
     },
   },
 })
